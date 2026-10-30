@@ -1,0 +1,29 @@
+name: build-addon
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch ReShade headers
+        shell: bash
+        run: |
+          git clone --depth 1 --branch v6.8.0 https://github.com/crosire/reshade.git reshade-src \
+            || git clone --depth 1 https://github.com/crosire/reshade.git reshade-src
+
+      - name: Configure
+        run: cmake -S addon -B build -A x64 -DRESHADE_INCLUDE="${{ github.workspace }}/reshade-src/include"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ReshadeFocusBridge-addon64
+          path: build/Release/ReshadeFocusBridge.addon64
+          if-no-files-found: error
